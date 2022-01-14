@@ -17,6 +17,5 @@
 #define I2C_1_SDA 22
 #define I2C_2_SCL 33
 #define I2C_2_SDA 23
-#define LED_BUILTIN 13
 
-#endif UTILS_PERSO_H
+#endif
