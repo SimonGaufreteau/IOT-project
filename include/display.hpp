@@ -40,4 +40,9 @@ void manageMatrixLed(void *pvParameters);
 void changeDisplayTypeML(MatrixDisplayType mdt);
 void changeDisplayTypeCL(ChainLedsDisplayType cldt);
 
+// Variable changes
+void changeCurrentPresetML(int preset);
+void setCurrentMessage(std::string message);
+void setCurrentMessage(const char *message);
+
 #endif
