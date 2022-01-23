@@ -1,5 +1,6 @@
 #include "matrix_led_display.hpp"
 #include "chainable_led_display.hpp"
+#include "http_handler.hpp"
 #include "utils.hpp"
 
 void createDisplayTasks()
@@ -9,12 +10,18 @@ void createDisplayTasks()
     createCHTasks();
 }
 
+void createHTTPTasks()
+{
+    setupTasksHTTP();
+}
+
 void setup()
 {
     SERIAL.begin(115200);
-    setupLEDMatrix();
+    /*setupLEDMatrix();
     setupLEDChain();
-    createDisplayTasks();
+    createDisplayTasks();*/
+    createHTTPTasks();
     //createPingTasks();
     for (;;)
         ;

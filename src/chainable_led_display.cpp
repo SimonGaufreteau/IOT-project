@@ -114,10 +114,11 @@ void createCHTasks()
 
 void setupLEDChain()
 {
-    /*if (current_cldt == nullptr)
+    if (current_cldt == nullptr)
     {
-        changeDisplayTypeCL(ChainLedsDisplayType::Random);
-    }*/
+        ChainLedsDisplayType cldt = ChainLedsDisplayType::Random;
+        changeDisplayTypeCL(cldt);
+    }
     if (current_RGB == nullptr)
     {
         current_RGB = new int[3];
