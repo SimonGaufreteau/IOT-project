@@ -1,4 +1,6 @@
 #include "matrix_led_display.hpp"
+#include <CircularBuffer.h>
+#include "sound_sensor.hpp"
 
 // Display devices
 GroveTwoRGBLedMatrixClass matrix;
@@ -15,11 +17,23 @@ MatrixDisplayType current_mdt;
 std::string current_message = "Nothing";
 int display_color = 0X11;
 boolean changed_ml;
+const int matrix_size = 8;
+CircularBuffer<int, matrix_size> current_sound_buffer;
+const int max_buffer = 3000;
+
+int current_sound = 0;
 
 // Presets
 int current_preset_ml = 0;
 
+// Constant delays
+const int MATRIX_SOUND_DELAY = 100;
+
 // ################################ ML methods ################################
+void changeCurrentSound(int n)
+{
+    current_sound = n;
+}
 
 void changeCurrentPresetML(int preset)
 {
@@ -68,6 +82,64 @@ void setCurrentMessage(const char *message)
     current_message = message;
 }
 
+void updateSoundBuffer(int soundValue)
+{
+    if (current_sound_buffer.isFull())
+    {
+        current_sound_buffer.shift();
+    }
+    current_sound_buffer.push(soundValue);
+}
+
+void displayCurrentSoundBuffer()
+{
+    SERIAL.println("Current sound buffer : ");
+    for (int i = 0; i < matrix_size; i++)
+    {
+        SERIAL.printf(" i : %d \n", current_sound_buffer[i]);
+    }
+}
+
+void displayCurrentSound()
+{
+    //displayCurrentSoundBuffer();
+
+    // Setup matrix
+    uint8_t *res = new uint8_t[matrix_size * matrix_size];
+    for (int i = 0; i < matrix_size * matrix_size; i++)
+    {
+        res[i] = 0xff;
+    }
+
+    // Print peaks
+    for (int i = 0; i < matrix_size; i++)
+    {
+        int buffer_val = current_sound_buffer[i] * 2;
+        //SERIAL.printf("Buffer : %d\n", buffer_val);
+        int min_val = min(buffer_val, max_buffer);
+        //SERIAL.printf("Min : %d\n", min_val);
+        int multiplied = min_val * matrix_size;
+        //SERIAL.printf("Multiplied : %d\n", multiplied);
+        double peak = (double)multiplied / (double)max_buffer;
+        //SERIAL.printf("Peak : %f\n", peak);
+
+        for (int j = 0; j < peak; j++)
+        {
+            res[j + matrix_size * i] = display_color;
+        }
+    }
+    /*for (int i = 0; i < matrix_size; i++)
+    {
+        for (int j = 0; j < matrix_size; j++)
+        {
+            SERIAL.printf("%d ", res[i + j * matrix_size]);
+        }
+        SERIAL.print("\n");
+    }*/
+    matrix.displayFrames(res, MATRIX_SOUND_DELAY, false, 1);
+    vTaskDelay(MATRIX_SOUND_DELAY);
+}
+
 void displayCurrentMessageML(boolean changed)
 {
     int wait_time = current_message.length() * 1000;
@@ -92,7 +164,9 @@ void manageMatrixLed(void *pvParameters)
         /*int r = random(3);
         changeDisplayTypeML(r);*/
         //SERIAL.printf("Random : %d\n", r);
-
+        int cval = getSoundValue();
+        //SERIAL.printf("Current sound value is : %d\n", cval);
+        updateSoundBuffer(cval);
         if (changed_ml)
         {
             switch (current_mdt)
@@ -104,7 +178,7 @@ void manageMatrixLed(void *pvParameters)
             }
             case MatrixDisplayType::Beat:
             {
-                //TODO
+                displayCurrentSound();
                 break;
             }
             case MatrixDisplayType::Preset:
@@ -115,13 +189,13 @@ void manageMatrixLed(void *pvParameters)
             default:
             {
                 SERIAL.printf("Default ML");
+                vTaskDelay(pdMS_TO_TICKS(1000));
+
                 break;
             }
             } // switch end
               //changed_ml = false;
         }
-
-        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 void createMLTasks()

@@ -166,7 +166,33 @@ void handleChangeColorPreset()
         SERIAL.println("Could not parse the message correctly.");
         server.send(404, "text/html", "Error, led1 not found.");
     }
-    server.send(202, "text/html", "osef");
+}
+
+void handleSoundSensor()
+{
+    SERIAL.println("Got a sound sensor request.");
+    String postBody = server.arg("plain");
+    DynamicJsonDocument doc(512);
+    server.send(200, "text/html", "Sound sensor received correctly.");
+    SERIAL.println("Setting matrix sound sensor...");
+    MatrixDisplayType mdt = MatrixDisplayType::Beat;
+    changeDisplayTypeML(mdt);
+}
+
+void handleRandomColors()
+{
+    SERIAL.println("Got a random colors request.");
+    String postBody = server.arg("plain");
+    DynamicJsonDocument doc(512);
+    DeserializationError error = deserializeJson(doc, postBody);
+    SERIAL.print("DeSerialized the json : ");
+    SERIAL.println(error.c_str());
+    JsonObject postObj = doc.as<JsonObject>();
+    server.send(200, "text/html", "Random colors received correctly.");
+    SERIAL.println("Setting led random colors...");
+    generateRandomRGB();
+    ChainLedsDisplayType cldt = ChainLedsDisplayType::Random;
+    changeDisplayTypeCL(cldt);
 }
 
 void taskServer(void *pvParameters)
@@ -199,12 +225,14 @@ void setupHTPPHandler()
     server.on("/displayMessage", HTTP_POST, handleMessage);
     server.on("/changeColor", HTTP_POST, handleChangeColor);
     server.on("/changeColorPreset", HTTP_POST, handleChangeColorPreset);
+    server.on("/randomColors", HTTP_POST, handleRandomColors);
+    server.on("/soundSensor", HTTP_POST, handleSoundSensor);
     server.onNotFound(handle_NotFound);
 }
 
 void setupTasksHTTP()
 {
     setupHTPPHandler();
-    xTaskCreate(taskPing, "taskPing", 10000, NULL, 1, &task_HTTPPing);
+    //xTaskCreate(taskPing, "taskPing", 10000, NULL, 1, &task_HTTPPing);
     xTaskCreate(taskServer, "taskServer", 10000, NULL, 1, &task_HTTPServer);
 }

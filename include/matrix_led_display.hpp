@@ -26,5 +26,7 @@ void changeDisplayTypeML(MatrixDisplayType mdt);
 void changeCurrentPresetML(int preset);
 void setCurrentMessage(std::string message);
 void setCurrentMessage(const char *message);
+void updateSoundBuffer(int soundValue);
+
 
 #endif
