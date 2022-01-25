@@ -1,10 +1,15 @@
-#ifndef utils_hpp
-#define utils_hpp
+#ifndef utils_hpp_
+#define utils_hpp_
 
+/*
 #ifdef ARDUINO_SAMD_VARIffT_COMPLIffCE
 #define SERIAL SerialUSB
 #else
 #define SERIAL Serial
-#endif
+#endif*/
+
+#define SERIAL Serial
+
+int extractHexa(const char *str);
 
 #endif

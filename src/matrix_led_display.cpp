@@ -11,7 +11,7 @@ float hue = 0.0;
 boolean up = true;
 
 // ML variables
-MatrixDisplayType *current_mdt;
+MatrixDisplayType current_mdt;
 std::string current_message = "Nothing";
 int display_color = 0X11;
 boolean changed_ml;
@@ -30,7 +30,7 @@ void changeDisplayTypeML(MatrixDisplayType mdt)
 {
     SERIAL.printf("Changing current ML mdt to : %d\n", mdt);
     changed_ml = true;
-    current_mdt = &mdt;
+    current_mdt = mdt;
 }
 
 void changeDisplayTypeML(int mdt_int)
@@ -73,8 +73,8 @@ void displayCurrentMessageML(boolean changed)
     int wait_time = current_message.length() * 1000;
     if (changed)
     {
-        SERIAL.println("Displaying current message : ");
-        SERIAL.println(current_message.c_str());
+        /*SERIAL.println("Displaying current message : ");
+        SERIAL.println(current_message.c_str());*/
         matrix.displayString(current_message.c_str(), wait_time, true, display_color);
     }
     vTaskDelay(pdMS_TO_TICKS(wait_time));
@@ -83,19 +83,19 @@ void displayCurrentMessageML(boolean changed)
 void manageMatrixLed(void *pvParameters)
 {
     SERIAL.println("Starting matrix led task");
-    MatrixDisplayType type = MatrixDisplayType::Preset;
+    MatrixDisplayType type = MatrixDisplayType::Message;
     changeDisplayTypeML(type);
     for (;;)
     {
         //SERIAL.printf("Current MDT = %d / changed ? %s\n", *current_mdt, changed_ml ? "true" : "false");
         //SERIAL.printf("Current MDT = %d / changed ? %s\n", *current_mdt, changed_ml ? "true" : "false");
-        int r = random(3);
-        changeDisplayTypeML(r);
+        /*int r = random(3);
+        changeDisplayTypeML(r);*/
         //SERIAL.printf("Random : %d\n", r);
 
         if (changed_ml)
         {
-            switch (*current_mdt)
+            switch (current_mdt)
             {
             case MatrixDisplayType::Message:
             {
@@ -114,7 +114,7 @@ void manageMatrixLed(void *pvParameters)
             }
             default:
             {
-                SERIAL.printf("Default");
+                SERIAL.printf("Default ML");
                 break;
             }
             } // switch end
@@ -136,9 +136,6 @@ void setupLEDMatrix()
     SERIAL.println("Matrix init success!!!");
 
     // TODO : get mdt from backend
-    if (current_mdt == nullptr)
-    {
-        changeDisplayTypeML(MatrixDisplayType::Preset);
-    }
+    changeDisplayTypeML(MatrixDisplayType::Message);
     changed_ml = true;
 }

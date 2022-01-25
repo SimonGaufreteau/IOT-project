@@ -1,18 +1,22 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include "utils.hpp"
 #include <WebServer.h>
 #include "ArduinoJson.h"
+#include "chainable_led_display.hpp"
+#include "matrix_led_display.hpp"
 
 // Tasks
 TaskHandle_t task_HTTPPing = NULL;
 TaskHandle_t task_HTTPServer = NULL;
 
-const char *ssid = "";
-const char *password = "";
+const char *ssid = "Freebox-A1D499";
+const char *password = "BrSR1wzKaCW(1pL5";
+
+// Board name
+String boardName = "BoardIOT1";
 
 //Your Domain name with URL path or IP address with path
-String serverName = "";
+String serverName = "http://78.198.193.139:8080";
 
 unsigned long lastTime = 0;
 // Set timer to 5 seconds (5000)
@@ -42,7 +46,7 @@ void taskPing(void *pvParameters)
             if (WiFi.status() == WL_CONNECTED)
             {
                 HTTPClient http;
-                String serverPath = serverName + "/ping/1/78.198.193.139:8081";
+                String serverPath = serverName + "/ping/1/" + boardName + "/78.198.193.139:8081";
                 //SERIAL.println("Starting a ping request");
 
                 // Your Domain name with URL path or IP address with path
@@ -83,13 +87,11 @@ void handle_NotFound()
 void handleMessage()
 {
     // If a new client connects,
-    currentTime = millis();
-    previousTime = currentTime;
     SERIAL.println("Got a message request.");
     String postBody = server.arg("plain");
     DynamicJsonDocument doc(512);
     DeserializationError error = deserializeJson(doc, postBody);
-    SERIAL.print("Serialized the json : ");
+    SERIAL.print("DeSerialized the json : ");
     SERIAL.println(error.c_str());
     JsonObject postObj = doc.as<JsonObject>();
     if (postObj.containsKey("message"))
@@ -97,12 +99,74 @@ void handleMessage()
         String message = postObj.getMember("message");
         SERIAL.println("Message received correctly : " + message + " / Sending the response to the server.");
         server.send(200, "text/html", "Message received : " + message);
+        setCurrentMessage(message.c_str());
+        MatrixDisplayType mdt = MatrixDisplayType::Message;
+        changeDisplayTypeML(mdt);
     }
     else
     {
         SERIAL.println("Could not parse the message correctly.");
         server.send(404, "text/html", "Error, message not found.");
     }
+}
+
+// Example
+
+void handleChangeColor()
+{
+    // If a new client connects,
+    SERIAL.println("Got a color change request.");
+    String postBody = server.arg("plain");
+    DynamicJsonDocument doc(512);
+    DeserializationError error = deserializeJson(doc, postBody);
+    SERIAL.print("DeSerialized the json : ");
+    SERIAL.println(error.c_str());
+    JsonObject postObj = doc.as<JsonObject>();
+    if (postObj.containsKey("color"))
+    {
+        String color = postObj.getMember("color");
+        SERIAL.println("Color received correctly : " + color + " / Sending the response to the server.");
+        server.send(200, "text/html", "Color received : " + color);
+        //setCurrentRGB()
+    }
+    else
+    {
+        SERIAL.println("Could not parse the message correctly.");
+        server.send(404, "text/html", "Error, message not found.");
+    }
+}
+
+void handleChangeColorPreset()
+{
+    // If a new client connects,
+    SERIAL.println("Got a changeColorPreset request.");
+    String postBody = server.arg("plain");
+    DynamicJsonDocument doc(512);
+    DeserializationError error = deserializeJson(doc, postBody);
+    SERIAL.print("DeSerialized the json : ");
+    SERIAL.println(error.c_str());
+    JsonObject postObj = doc.as<JsonObject>();
+    if (postObj.containsKey("led1"))
+    {
+        String led1 = postObj.getMember("led1");
+        String led2 = postObj.getMember("led2");
+        String led3 = postObj.getMember("led3");
+        String res = "Message received correctly : 1 : " + led1 + " / 2 : " + led2 + " / 3 : " + led3;
+        SERIAL.println(res + " / Sending the response to the server.");
+        server.send(200, "text/html", res);
+        SERIAL.println("Setting led colors...");
+        setCurrentRGB(0, led1);
+        setCurrentRGB(1, led2);
+        setCurrentRGB(2, led3);
+        ChainLedsDisplayType cldt = ChainLedsDisplayType::Color;
+        changeDisplayTypeCL(cldt);
+    }
+    else
+    {
+        SERIAL.println("Could not parse the message correctly.");
+        server.send(404, "text/html", "Error, led1 not found.");
+    }
+    server.send(202, "text/html", "osef");
 }
 
 void taskServer(void *pvParameters)
@@ -133,6 +197,8 @@ void setupHTPPHandler()
 
     SERIAL.println("Setting up routes for server");
     server.on("/displayMessage", HTTP_POST, handleMessage);
+    server.on("/changeColor", HTTP_POST, handleChangeColor);
+    server.on("/changeColorPreset", HTTP_POST, handleChangeColorPreset);
     server.onNotFound(handle_NotFound);
 }
 

@@ -18,9 +18,9 @@ void createHTTPTasks()
 void setup()
 {
     SERIAL.begin(115200);
-    /*setupLEDMatrix();
+    setupLEDMatrix();
     setupLEDChain();
-    createDisplayTasks();*/
+    createDisplayTasks();
     createHTTPTasks();
     //createPingTasks();
     for (;;)

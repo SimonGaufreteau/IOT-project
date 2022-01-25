@@ -24,5 +24,7 @@ void createCHTasks();
 void changeDisplayTypeCL(ChainLedsDisplayType cldt);
 
 // Variable
+void setCurrentRGB(int i, int R, int G, int B);
+void setCurrentRGB(int i, String rgb_string);
 
 #endif
