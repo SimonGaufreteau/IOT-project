@@ -25,6 +25,9 @@ unsigned long timerDelay = 5000;
 // Set web server port number to 80
 WebServer server(8081);
 
+// Board ID
+const int board_id = 1;
+
 // Variable to store the HTTP request
 String header;
 
@@ -227,6 +230,7 @@ void setupHTPPHandler()
     server.on("/changeColorPreset", HTTP_POST, handleChangeColorPreset);
     server.on("/randomColors", HTTP_POST, handleRandomColors);
     server.on("/soundSensor", HTTP_POST, handleSoundSensor);
+    //server.on("/synchro",HTTP_POST,handleSynchro);
     server.onNotFound(handle_NotFound);
 }
 
